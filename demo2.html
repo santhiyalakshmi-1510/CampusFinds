@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Smart Campus Lost & Found Dashboard</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Orbitron:wght@600&display=swap" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  font-family:'Poppins',sans-serif;
+  background:linear-gradient(120deg,#0f2027,#203a43,#2c5364);
+  color:#fff;
+  text-align:center;
+}
+h2{
+  font-family:'Orbitron',sans-serif;
+  margin-top:20px;
+  font-size:32px;
+  color:#0ff;
+  letter-spacing:1.5px;
+}
+.report-container{
+  display:flex;
+  justify-content:center;
+  gap:20px;
+  padding:15px;
+  flex-wrap:wrap;
+}
+.report-card, .display-card{
+  background:rgba(0,255,255,0.05);
+  border:1px solid rgba(0,255,255,0.2);
+  border-radius:20px;
+  padding:15px;
+  width:320px;
+  box-shadow:0 15px 30px rgba(0,255,255,0.2);
+  font-size:14px;
+}
+.lists-container{
+  display:flex;
+  justify-content:center;
+  gap:15px;
+  flex-wrap:wrap;
+  padding:15px;
+}
+input{
+  width:90%;
+  padding:6px;
+  margin:5px 0;
+  border-radius:10px;
+  border:1px solid rgba(0,255,255,0.3);
+  background:rgba(0,255,255,0.05);
+  color:#0ff;
+  font-size:13px;
+}
+button{
+  padding:6px 14px;
+  margin:4px 4px;
+  border-radius:25px;
+  border:1px solid #0ff;
+  background:rgba(0,255,255,0.1);
+  color:#0ff;
+  font-weight:700;
+  cursor:pointer;
+  font-size:13px;
+}
+button:hover{ transform:scale(1.05); }
+.preview-img{
+  width:70px;
+  height:70px;
+  object-fit:cover;
+  border-radius:6px;
+  margin-top:4px;
+  border:1px solid #0ff;
+  cursor:pointer;
+  transition:0.3s;
+}
+.preview-img:hover{ transform:scale(1.05); }
+.item-box{
+  margin-bottom:6px;
+  background:rgba(0,255,255,0.05);
+  padding:6px;
+  border-radius:6px;
+  border:1px solid #0ff;
+  text-align:left;
+  font-size:12px;
+}
+.status-badge{
+  display:inline-block;
+  padding:2px 5px;
+  border-radius:6px;
+  font-weight:700;
+  margin-bottom:4px;
+  font-size:11px;
+}
+.status-lost{background:#ff4d4d;color:#fff;}
+.status-found{background:#00ff99;color:#000;}
+.status-similar{background:#ffaa00;color:#000;}
+.status-returned{background:#888;color:#fff;}
+.image-row{
+  display:flex;
+  gap:4px;
+  flex-wrap:wrap;
+}
+.login-screen{
+  position:fixed;
+  top:0; left:0;
+  width:100%;
+  height:100%;
+  background:linear-gradient(120deg,#0f2027,#203a43,#2c5364);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  z-index:999;
+  padding:15px;
+}
+/* FULL SCREEN IMAGE MODAL */
+#imageModal{
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.95);
+  justify-content:center;
+  align-items:center;
+  z-index:2000;
+}
+#imageModal img{
+  max-width:95%;
+  max-height:95%;
+  border-radius:10px;
+}
+#imageModal span{
+  position:absolute;
+  top:20px;
+  right:35px;
+  font-size:40px;
+  color:white;
+  cursor:pointer;
+}
+@media(max-width:960px){
+  .report-container{
+    flex-direction:column;
+    align-items:center;
+  }
+  .report-card, .display-card{width:95%;}
+  .lists-container{flex-direction:column; align-items:center;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="login-screen">
+  <h2>🔐 Campus Portal Login</h2>
+  <input type="text" id="loginUsername" placeholder="Enter Username">
+  <input type="password" id="loginPassword" placeholder="Enter Password">
+  <button onclick="login()">Login</button>
+  <p id="loginError" style="color:red;"></p>
+</div>
+
+<div id="mainApp" style="display:none;">
+<h2>🎓 Smart Campus Lost & Found 2026</h2>
+<h3 id="welcomeUser"></h3>
+
+<div style="margin-bottom:10px;">
+  <button onclick="logout()">🚪 Logout</button>
+  <button onclick="clearAll()">🗑 Clear Data</button>
+</div>
+
+<div class="report-container">
+  <div class="report-card">
+    <h3>Report Lost Item</h3>
+    <input type="text" id="lostName" placeholder="Your Name">
+    <input type="text" id="lostPhone" placeholder="Phone Number">
+    <input type="text" id="lostItem" placeholder="Item Name">
+    <input type="text" id="lostLoc" placeholder="Location">
+    <input type="file" id="lostImage" accept="image/*" onchange="previewLostImage(event)">
+    <img id="lostPreview" class="preview-img" style="display:none;">
+    <button onclick="reportLost()">Submit</button>
+  </div>
+
+  <div class="report-card">
+    <h3>Report Found Item</h3>
+    <input type="text" id="foundName" placeholder="Your Name">
+    <input type="text" id="foundPhone" placeholder="Phone Number">
+    <input type="text" id="foundItem" placeholder="Item Name">
+    <input type="text" id="foundLoc" placeholder="Location">
+    <input type="file" id="foundImage" accept="image/*" onchange="previewFoundImage(event)">
+    <img id="foundPreview" class="preview-img" style="display:none;">
+    <button onclick="reportFound()">Submit</button>
+  </div>
+</div>
+
+<div class="lists-container">
+  <div class="display-card">
+    <h3>📌 All Lost Items</h3>
+    <div id="allLost"></div>
+  </div>
+
+  <div class="display-card">
+    <h3>📌 All Found Items</h3>
+    <div id="allFound"></div>
+  </div>
+
+  <div class="display-card">
+    <h3>🔍 Similar Matches</h3>
+    <div id="similarMatches"></div>
+  </div>
+
+  <div class="display-card">
+    <h3 style="cursor:pointer;" onclick="toggleReturned()">📂 Returned Items ⬇</h3>
+    <div id="returnedItems" style="display:none;"></div>
+  </div>
+</div>
+</div>
+
+<!-- FULLSCREEN IMAGE MODAL -->
+<div id="imageModal">
+  <span onclick="closeModal()">&times;</span>
+  <img id="modalImage">
+</div>
+
+<script>
+const PORTAL_PASSWORD="items found";
+let lostItems = JSON.parse(localStorage.getItem("lostItems")) || [];
+let foundItems = JSON.parse(localStorage.getItem("foundItems")) || [];
+let returnedItems = JSON.parse(localStorage.getItem("returnedItems")) || [];
+let returnedVisible = false;
+
+// Login
+function login(){
+  if(loginPassword.value===PORTAL_PASSWORD){
+    sessionStorage.setItem("loggedIn","true");
+    sessionStorage.setItem("username",loginUsername.value);
+    loginScreen.style.display="none";
+    mainApp.style.display="block";
+    welcomeUser.innerText="👋 Welcome, "+loginUsername.value;
+    displayAllItems();
+  } else loginError.innerText="Incorrect Password!";
+}
+function logout(){ sessionStorage.clear(); location.reload(); }
+
+// Preview Images
+function previewLostImage(e){ let r=new FileReader(); r.onload=()=>{lostPreview.src=r.result; lostPreview.style.display="block";}; r.readAsDataURL(e.target.files[0]); }
+function previewFoundImage(e){ let r=new FileReader(); r.onload=()=>{foundPreview.src=r.result; foundPreview.style.display="block";}; r.readAsDataURL(e.target.files[0]); }
+
+// Report Items
+function reportLost(){ if(!lostName.value||!lostPhone.value||!lostItem.value||!lostLoc.value||!lostImage.files[0]){ alert("Fill all fields"); return; }
+  let r=new FileReader();
+  r.onload=e=>{ lostItems.push({name:lostName.value, phone:lostPhone.value, itemName:lostItem.value.toLowerCase(), loc:lostLoc.value.toLowerCase(), image:e.target.result, status:"lost"}); 
+    localStorage.setItem("lostItems", JSON.stringify(lostItems)); displayAllItems(); location.reload(); };
+  r.readAsDataURL(lostImage.files[0]);
+}
+function reportFound(){ if(!foundName.value||!foundPhone.value||!foundItem.value||!foundLoc.value||!foundImage.files[0]){ alert("Fill all fields"); return; }
+  let r=new FileReader();
+  r.onload=e=>{ foundItems.push({name:foundName.value, phone:foundPhone.value, itemName:foundItem.value.toLowerCase(), loc:foundLoc.value.toLowerCase(), image:e.target.result, status:"found"});
+    localStorage.setItem("foundItems", JSON.stringify(foundItems)); displayAllItems(); location.reload(); };
+  r.readAsDataURL(foundImage.files[0]);
+}
+
+function isSimilar(a,b){ return a.includes(b) || b.includes(a); }
+
+// Mark as Returned
+function markReturned(type,index){
+  if(type==="lost"){ returnedItems.push(lostItems[index]); lostItems.splice(index,1); localStorage.setItem("lostItems", JSON.stringify(lostItems)); }
+  else if(type==="found"){ returnedItems.push(foundItems[index]); foundItems.splice(index,1); localStorage.setItem("foundItems", JSON.stringify(foundItems)); }
+  localStorage.setItem("returnedItems", JSON.stringify(returnedItems));
+  displayAllItems();
+}
+
+// Toggle Returned Items
+function toggleReturned(){
+  const div = document.getElementById("returnedItems");
+  returnedVisible = !returnedVisible;
+  div.style.display = returnedVisible ? "block" : "none";
+  const title = div.previousElementSibling;
+  title.innerText = returnedVisible ? "📂 Returned Items ⬆" : "📂 Returned Items ⬇";
+}
+
+// Display All Items
+function displayAllItems(){
+  let returnedItemsDiv = document.getElementById("returnedItems");
+
+  // Lost
+  let lostHTML=""; 
+  lostItems.forEach((l,i)=>{ let matched=foundItems.find(f=>f.itemName===l.itemName && f.loc===l.loc); if(matched) l.status="found";
+    lostHTML+=`<div class="item-box">
+      <span class="status-badge ${l.status==='found'?'status-found':'status-lost'}">${l.status==='found'?'FOUND':'LOST'}</span>
+      <p><b>${l.itemName}</b> at ${l.loc}</p>
+      <p>🔴 Owner: ${l.name} | 📞 ${l.phone}</p>
+      <div class="image-row"><img src="${l.image}" class="preview-img" onclick="openModal('${l.image}')"></div>
+      <button onclick="markReturned('lost',${i})">✅ Mark as Returned</button>
+    </div>`; 
+  }); allLost.innerHTML=lostHTML||"<p>No lost items yet.</p>";
+
+  // Found
+  let foundHTML=""; 
+  foundItems.forEach((f,i)=>{ foundHTML+=`<div class="item-box">
+      <span class="status-badge status-found">FOUND</span>
+      <p><b>${f.itemName}</b> at ${f.loc}</p>
+      <p>🟢 Found By: ${f.name} | 📞 ${f.phone}</p>
+      <div class="image-row"><img src="${f.image}" class="preview-img" onclick="openModal('${f.image}')"></div>
+      <button onclick="markReturned('found',${i})">✅ Mark as Returned</button>
+    </div>`; 
+  }); allFound.innerHTML=foundHTML||"<p>No found items yet.</p>";
+
+  // Similar Matches
+  let similarHTML=""; 
+  lostItems.forEach((l,li)=>{ foundItems.forEach((f,fi)=>{ if(l.status!=='found' && isSimilar(l.itemName,f.itemName)){
+    similarHTML+=`<div class="item-box">
+      <span class="status-badge status-similar">SIMILAR</span>
+      <p><b>Lost:</b> ${l.itemName} at ${l.loc} (Owner: ${l.name})</p>
+      <p><b>Found:</b> ${f.itemName} at ${f.loc} (Finder: ${f.name})</p>
+      <div class="image-row">
+        <img src="${l.image}" class="preview-img" onclick="openModal('${l.image}')">
+        <img src="${f.image}" class="preview-img" onclick="openModal('${f.image}')">
+      </div>
+      <button onclick="markReturned('lost',${li}); markReturned('found',${fi})">✅ Mark as Returned</button>
+    </div>`; 
+  }});}); similarMatches.innerHTML=similarHTML||"<p>No similar matches found.</p>";
+
+  // Returned Items
+  let returnedHTML=""; 
+  returnedItems.forEach((r,i)=>{ returnedHTML+=`<div class="item-box">
+      <span class="status-badge status-returned">RETURNED</span>
+      <p><b>${r.itemName}</b> at ${r.loc}</p>
+      <p>🟢 By: ${r.name} | 📞 ${r.phone}</p>
+      <div class="image-row"><img src="${r.image}" class="preview-img" onclick="openModal('${r.image}')"></div>
+    </div>`; 
+  }); returnedItemsDiv.innerHTML=returnedHTML||"<p>No returned items yet.</p>";
+}
+
+// Fullscreen image
+function openModal(src){ modalImage.src=src; imageModal.style.display="flex"; }
+function closeModal(){ imageModal.style.display="none"; }
+
+// Clear Data
+function clearAll(){ if(confirm("Clear all data?")){ localStorage.clear(); location.reload(); } }
+
+window.onload=function(){ if(sessionStorage.getItem("loggedIn")==="true"){ loginScreen.style.display="none"; mainApp.style.display="block"; welcomeUser.innerText="👋 Welcome, "+sessionStorage.getItem("username"); displayAllItems(); } };
+</script>
+</body>
+</html>
